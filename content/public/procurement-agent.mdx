@@ -1,0 +1,68 @@
+---
+slug: procurement-agent
+title: "Agent orchestrateur Achats"
+tagline: "Un seul chat pour piloter les outils IA Achats : appels d'offres, due-diligence fournisseurs, comparaison de contrats"
+clientAlias: "Groupe de luxe international"
+sector: "Luxe"
+period: "2026-06 → 2026-08"
+status: "poc"
+role: "Développeur unique (vibe coding avec Claude Code), avec un PMO"
+team: "solo"
+domains: ["IA générative", "Multi-agents", "RAG", "Observabilité"]
+stack: ["Python", "Streamlit", "LangChain", "Azure OpenAI (tool calling)", "Tavily", "Langfuse", "Streamlit Community Cloud", "GitLab CI"]
+highlights:
+  - "Agent superviseur tool-calling qui route une question en langage naturel vers le bon outil métier"
+  - "Intègre deux POC existants (vérification d'appels d'offres, due-diligence fournisseurs) comme bibliothèques, sans réécrire leur logique"
+  - "Rapports d'audit, matrices de conformité et diffs de contrats rendus dans le fil de conversation, persistés au rechargement"
+  - "UI premium, sidebar de conversations avec recherche temps réel, déclinaison marque blanche"
+  - "Observabilité Langfuse : une trace par tour d'agent"
+metrics: ["~4 575 lignes de code source"]
+media: []
+featuredScore: 4
+confidential: true
+sources: ["procurement-agent"]
+---
+
+## Le problème
+
+Le service achats d'un groupe de luxe international disposait de plusieurs POC IA spécialisés, chacun avec sa propre interface. Pour un acheteur, il fallait savoir quel outil ouvrir et comment l'alimenter. L'enjeu : offrir un point d'entrée conversationnel unique au-dessus de briques hétérogènes, sans réécrire leur logique métier.
+
+## La solution
+
+Un agent « chapeau » : l'utilisateur dialogue en langage naturel et l'agent choisit l'outil pertinent. « Est-ce que X a bien répondu à l'appel d'offres ? » déclenche la vérification de conformité, « fais un audit compliance de X » lance la due-diligence fournisseur, deux versions d'un contrat jointes au chat déclenchent la comparaison de clauses. Les résultats s'affichent dans la conversation avec les mêmes composants riches que les POC d'origine.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Acheteur] --> UI[Chat Streamlit]
+  UI --> A[Agent orchestrateur LangChain]
+  A --> LLM[Azure OpenAI tool calling]
+  A --> T1[Outil appel d'offres]
+  A --> T2[Outil audit fournisseur]
+  A --> T3[Outil comparaison de contrats]
+  T1 --> P1[POC RFP Checker]
+  T2 --> P2[POC Suppliers Compliance + recherche web]
+  A --> RT[Runtime : payloads structurés → UI]
+  A --> LF[Langfuse]
+```
+
+## Fonctionnalités clés
+
+- Routage automatique entre trois familles de questions (appel d'offres, audit fournisseur, contrat).
+- Intégration multi-POC dans un seul process, avec gestion des conflits de configuration entre briques.
+- Pont outils ↔ UI : un outil pousse un rendu riche sérialisable qui survit au rechargement.
+- Upload RFP + réponses, pièces jointes dans le chat (PDF, ZIP), vues plein écran.
+- Comparaison factuelle de deux versions de contrat (clauses modifiées, ajoutées, supprimées).
+- Conversations persistées, recherche temps réel, renommage, pastille de risque.
+- UI marque blanche multi-tenant.
+- Déploiement auto-suffisant sur Streamlit Community Cloud.
+
+## Mon rôle
+
+Développeur unique du POC (conception, code, UI, déploiement), en vibe coding avec Claude Code, avec un PMO. <!-- TODO: valider la formulation -->
+
+## Résultats
+
+- Le démonstrateur a débouché sur une proposition commerciale.
+<!-- TODO: valeur générée et satisfaction client non renseignées. Les données de démo sont mises en scène : ne pas les présenter comme des résultats réels. -->

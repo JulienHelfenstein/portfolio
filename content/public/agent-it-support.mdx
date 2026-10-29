@@ -1,0 +1,76 @@
+---
+slug: agent-it-support
+title: "Agent IT Support dans Teams"
+tagline: "Un agent de support IT niveau 1 qui cherche, puis escalade en ticket Jira et propose un rendez-vous"
+clientAlias: "Cabinet de conseil data & IA — usage interne"
+sector: "Interne Saegus"
+period: "2026-08"
+status: "poc"
+role: "Conception et développement de bout en bout, en solo"
+team: "solo"
+domains: ["IA générative", "RAG", "Multi-agents"]
+stack: ["Python", "FastAPI", "LangChain", "ChromaDB", "OpenAI (gpt-4o, embeddings)", "Tavily", "Jira API", "Microsoft Graph", "Microsoft Teams (webhooks)", "Bot Framework", "Pydantic"]
+highlights:
+  - "Escalade progressive RAG → recherche web → ticket Jira + créneaux de rendez-vous, pilotée par une machine à états"
+  - "RAG sur l'historique des tickets IT avec seuils de confiance (≥ 0,75 réponse directe, 0,50–0,74 avec avertissement)"
+  - "Ticket Jira créé avec résumé, priorité estimée et historique de la conversation"
+  - "3 créneaux de 30 min proposés à partir du calendrier Outlook (Graph), événement créé au choix"
+  - "Intégration Teams sans droits admin : webhooks entrant/sortant signés HMAC, réponse asynchrone sous la limite des 5 s"
+metrics: []
+media: []
+featuredScore: 3
+confidential: false
+sources: ["poc-agent-it"]
+---
+
+<!-- TODO: période réelle inconnue. Aucune capture d'écran disponible. -->
+
+## Le problème
+
+Les demandes IT de premier niveau (mot de passe, VPN, imprimante…) arrivent en vrac et mobilisent le support pour des questions déjà résolues par le passé. Les collaborateurs veulent une réponse immédiate là où ils travaillent : dans Microsoft Teams.
+
+## La solution
+
+Un agent conversationnel IT dans Teams, qui suit une logique d'escalade :
+1. Il cherche une solution dans la base de connaissances (historique de tickets vectorisé).
+2. Si la confiance est faible ou si l'utilisateur dit « non », il cherche sur le web et synthétise une réponse sourcée.
+3. Si rien ne résout le problème, il crée un ticket Jira contextualisé et propose trois créneaux d'intervention issus du calendrier Outlook.
+
+L'utilisateur peut aussi suivre un ticket existant ou y ajouter un commentaire sans quitter Teams.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  T[Teams<br/>@mention] -->|Outgoing webhook HMAC| A[FastAPI]
+  A --> F[ConversationFlow<br/>machine à états]
+  F --> R[RAG ChromaDB<br/>historique tickets]
+  F --> W[Tavily + gpt-4o<br/>synthèse web]
+  F --> J[Jira<br/>création / suivi ticket]
+  F --> O[Microsoft Graph<br/>calendrier Outlook]
+  F -->|Incoming webhook| T
+```
+
+- Teams impose une réponse en moins de 5 s : le serveur renvoie un accusé immédiat et traite le message en tâche `asyncio` de fond.
+- Faute de droits admin pour publier un bot, l'intégration passe par des webhooks entrant/sortant ; le code Bot Framework est prêt mais dormant.
+- Outlook via Microsoft Graph en flux *client credentials*, limité à un calendrier de démo (consentement admin requis pour aller plus loin).
+
+## Fonctionnalités clés
+
+- Réponse RAG avec score de confiance et question de validation « Est-ce que cela résout votre problème ? ».
+- Fallback web automatique, sources citées.
+- Création de ticket Jira avec historique de conversation et priorité estimée.
+- Proposition de 3 créneaux de 30 min sur les 3 prochains jours ouvrés, sans chevauchement, et création de l'événement.
+- Suivi d'un ticket (statut, assigné, dernière mise à jour) et ajout de commentaire.
+- Gestion d'erreurs par service (RAG, web, Jira, Graph indisponibles, timeout > 10 s).
+
+## Mon rôle
+
+J'ai porté ce projet seul, de bout en bout : cadrage du besoin, conception de l'architecture, développement, tests, déploiement et démonstration.
+
+## Résultats
+
+<!-- TODO: aucun résultat mesuré. Objectifs fixés (≥ 60 % des requêtes résolues par le RAG, satisfaction ≥ 4/5) sans mesure associée. -->
+
+- PoC fonctionnel de bout en bout dans un canal Teams, sur un calendrier de démonstration.
+- Limites identifiées et documentées : réponse dans un seul canal, identité utilisateur issue du payload, permissions Graph à obtenir pour un usage réel.

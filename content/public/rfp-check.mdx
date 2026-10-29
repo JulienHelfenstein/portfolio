@@ -1,0 +1,69 @@
+---
+slug: rfp-check
+title: "RFP Compliance Checker"
+tagline: "Vérifier en quelques minutes si chaque réponse fournisseur couvre réellement toutes les exigences d'un appel d'offres"
+clientAlias: "Groupe de luxe international"
+sector: "Luxe"
+period: "2026-05 → 2026-08"
+status: "poc"
+role: "Conception et développement de bout en bout, en solo"
+team: "solo"
+domains: ["IA générative", "RAG", "DevOps", "Observabilité"]
+stack: ["Python", "Streamlit", "LangChain", "Azure OpenAI", "Azure AI Document Intelligence", "markitdown", "Supabase", "OpenTelemetry", "Application Insights", "Terraform", "GitLab CI"]
+highlights:
+  - "Extraction automatique de la grille d'exigences depuis le PDF du RFP (techniques, juridiques, financières, livrables, format)"
+  - "Vérification critère par critère avec décomposition en sous-assertions, citation et page source"
+  - "Passe « avocat du diable » qui relit les sous-assertions non couvertes avant verdict final"
+  - "Extraction du prix de chaque offre et tableau comparatif fournisseurs × critères"
+  - "Zero Trust : Managed Identities, OIDC GitLab → Azure, hébergement en France"
+metrics: []
+media: []
+featuredScore: 4
+confidential: true
+sources: ["rfp-check"]
+---
+
+## Le problème
+
+Le service achats d'un groupe de luxe international émet des appels d'offres et reçoit plusieurs réponses PDF à comparer à la main avec la grille d'exigences. C'est long (20 à 100 pages par dossier), risqué (un critère oublié laisse passer une offre non conforme) et non standardisé (chaque acheteur applique sa propre grille).
+
+## La solution
+
+Un agent IA qui ingère l'appel d'offres, en extrait toutes les exigences vérifiables, puis contrôle chaque réponse fournisseur critère par critère : conforme, partiel, non conforme ou non mentionné, avec une citation et la page source. Il extrait aussi le prix de chaque offre et produit un tableau récapitulatif comparatif, exportable.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Acheteur] --> UI[Streamlit sur Azure Web App]
+  UI --> P[Parsing PDF / ZIP / Excel]
+  P --> DI[Azure AI Document Intelligence + markitdown]
+  UI --> X[Extraction checklist RFP]
+  UI --> V[Vérificateur par critère]
+  V --> R[Retrieval sémantique + fallback BM25]
+  X --> LLM[Azure OpenAI gpt-4o]
+  V --> LLM
+  V --> DA[Passe avocat du diable]
+  UI --> DB[(Supabase : historique des runs)]
+  UI --> OT[OpenTelemetry → App Insights]
+```
+
+## Fonctionnalités clés
+
+- Extraction exhaustive de la checklist de l'appel d'offres : résumé, calendrier, parties prenantes, exigences catégorisées.
+- Vérification de chaque exigence sur les pages les plus pertinentes de la réponse (embeddings, repli lexical BM25 si l'API échoue).
+- Décomposition de chaque critère en sous-assertions, puis relecture « avocat du diable » des points non couverts pour éviter les faux partiels.
+- Extraction du nom du fournisseur et du prix (montant, devise, périmètre).
+- Entrées PDF, ZIP et Excel.
+- Espace projets façon ChatGPT : historique des analyses persisté, renommage, suppression.
+- CI GitLab : lint, tests avec couverture ≥ 80 % bloquante, LLM-as-a-Judge, scan Trivy, Terraform, déploiement via OIDC sans secret statique.
+
+## Mon rôle
+
+J'ai porté ce projet seul, de bout en bout : cadrage du besoin, conception de l'architecture, développement, tests, déploiement et démonstration.
+
+## Résultats
+
+<!-- TODO: aucun résultat mesuré dans le repo ; les objectifs du cadrage (couverture ≥ 95 %, précision ≥ 85 %, < 3 min) sont des cibles. Ne pas présenter la démo comme une mesure. -->
+
+Le POC a ensuite été réutilisé comme brique de vérification d'appel d'offres dans un agent orchestrateur Achats (voir fiche procurement-agent).

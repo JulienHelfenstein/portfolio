@@ -1,0 +1,67 @@
+---
+slug: suppliers-compliance
+title: "Supply Chain Compliance Screening"
+tagline: "Détecter en amont les risques financiers, éthiques et RSE d'un fournisseur avant qu'ils ne touchent la marque"
+clientAlias: "Groupe de luxe international"
+sector: "Luxe"
+period: "2026-05 → 2026-06"
+status: "poc"
+role: "Développeur unique"
+team: "solo"
+domains: ["IA générative", "Multi-agents", "Observabilité", "DevOps"]
+stack: ["Python", "Streamlit", "LangChain", "Azure OpenAI", "Pydantic", "DuckDuckGo Search", "Tavily", "Supabase", "OpenTelemetry", "Terraform", "GitLab CI"]
+highlights:
+  - "Trois recherches web ciblées par fournisseur : santé financière, éthique et conditions de travail, environnement"
+  - "Verdicts évalués contre le code de conduite fournisseurs du client, catégorie par catégorie"
+  - "Sortie LLM en JSON Pydantic strict, verdicts Faible / Moyen / Élevé avec sources cliquables"
+  - "Anonymisation : audit web sous le vrai nom, affichage et persistance sous un nom public"
+  - "Dashboard acheteur : risque global, KPIs, cartes d'évaluation, feedback utilisateur tracé"
+metrics: []
+media: []
+featuredScore: 3
+confidential: true
+sources: ["suppliers-compliance"]
+---
+
+## Le problème
+
+Un groupe de luxe international doit auditer en continu sa chaîne d'approvisionnement et ses partenaires pour repérer tôt tout risque financier, légal ou environnemental susceptible d'atteindre la réputation de ses marques. Ce travail de veille est manuel, dispersé entre sources et difficile à tracer.
+
+## La solution
+
+Un agent de compliance screening : à partir d'une liste de fournisseurs (nom, pays, domaine), il lance des recherches web ciblées par catégorie de risque, synthétise les faits avec un LLM en sortie structurée, et restitue un tableau de bord exécutif rouge / orange / vert où chaque verdict renvoie à ses sources.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Compliance / Achats] --> UI[Dashboard Streamlit]
+  UI --> AG[Agent Compliance LangChain]
+  AG --> WS[Recherche web DuckDuckGo / Tavily]
+  AG --> LLM[Azure OpenAI sortie Pydantic]
+  AG --> REF[Référentiel code de conduite]
+  AG --> AN[Anonymiseur]
+  UI --> DB[(Supabase Postgres)]
+  AG --> OT[OpenTelemetry]
+```
+
+## Fonctionnalités clés
+
+- Audit par fournisseur en trois axes, avec requêtes spécialisées et sources épinglées pour l'axe légal et éthique.
+- Évaluation alignée sur les exigences du code de conduite fournisseurs du client.
+- Sortie JSON Pydantic stricte : synthèse factuelle, score par catégorie, liste des URLs justificatives.
+- Due-diligence anonymisée des partenaires (remplacement du nom et des raisons sociales dans les textes).
+- Découverte de fournisseurs par marque avec animation de recherche.
+- Rapport : risque global, KPIs internes / externes, sidebar avec pastilles de score et recherche temps réel.
+- Feedback 👍 / 👎 et métriques (durées, tokens) via OpenTelemetry.
+- Quality gates GitLab : lint, tests ≥ 80 %, LLM-as-a-Judge, Trivy, Terraform.
+
+## Mon rôle
+
+Développeur unique du POC (conception, développement, CI).
+
+## Résultats
+
+<!-- TODO: aucun résultat mesuré dans le repo ; les critères du cadrage sont des cibles. Suite donnée à préciser. -->
+
+Le POC a ensuite servi d'outil d'audit fournisseur dans un agent orchestrateur Achats (voir fiche procurement-agent).

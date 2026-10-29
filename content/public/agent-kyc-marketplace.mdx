@@ -1,0 +1,78 @@
+---
+slug: agent-kyc-marketplace
+title: "Agent KYC d'enrichissement CRM"
+tagline: "Compléter automatiquement les fiches prospects du CRM à partir des registres officiels, via MCP"
+clientAlias: "Cabinet de conseil data & IA, en partenariat avec un éditeur de données"
+sector: "Interne Saegus · Partenariat"
+period: "2026-08"
+status: "démo"
+role: "Conception et développement de bout en bout, en solo"
+team: "solo"
+domains: ["IA générative", "Multi-agents", "Data"]
+stack: ["Python", "Streamlit", "OpenAI (gpt-5.4-mini, gpt-4o)", "MCP (Model Context Protocol)", "Pydantic", "Plotly", "pandas"]
+highlights:
+  - "Agent OpenAI à appel d'outils branché sur le serveur MCP d'une marketplace de données (Sirene, Infogreffe, états financiers)"
+  - "Import d'un export CRM (CSV) et enrichissement des cellules manquantes, compte par compte ou en lot"
+  - "Garde-fous anti-injection sur les requêtes générées par le LLM (whitelist de champs, clauses dangereuses rejetées)"
+  - "Fiche 360° : récap des missions, score de santé financière 0-100, veille stratégique web synthétisée"
+  - "Trace des outils MCP et requêtes affichée en direct, chat libre sur le CRM enrichi, exports"
+metrics: []
+media: []
+featuredScore: 3
+confidential: false
+sources: ["poc-agent-marketplace"]
+---
+
+<!-- TODO: période réelle inconnue. Aucune capture d'écran disponible. -->
+
+## Le problème
+
+Les fiches prospects du CRM sont incomplètes : SIREN, forme juridique, dirigeants, chiffre d'affaires, effectifs manquent souvent. Les commerciaux les complètent à la main en naviguant entre registres et sites d'actualité avant chaque rendez-vous.
+
+## La solution
+
+Projet mené en collaboration avec un éditeur de marketplace de données partenaire, et présenté en démo live au Saegus Summit : notre agent y exploitait en direct le serveur MCP de leur marketplace.
+
+
+Un agent KYC dans une interface Streamlit. Le commercial importe un export CSV du CRM ; l'agent détecte les comptes, interroge une marketplace de données open data via son serveur MCP (base Sirene, Infogreffe, états financiers, taxonomie européenne), complète les champs manquants et produit une fiche KYC prête à l'emploi. Un chat permet ensuite de poser des questions libres sur les données enrichies.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Commercial] --> S[Streamlit]
+  S --> C[Import CSV CRM]
+  C --> A[Agent KYC<br/>OpenAI tool calling]
+  A --> G[Guardrails requêtes<br/>whitelist champs]
+  G --> M[Passerelle MCP<br/>session stdio]
+  M --> H[(Marketplace de données<br/>Sirene / Infogreffe / finances)]
+  A --> K[Fiche KYC Pydantic]
+  K --> D[Fiche 360°<br/>score santé + veille web]
+  W[Recherche web + gpt-4o] --> D
+```
+
+- Un service dédié encapsule la session MCP et liste dynamiquement les outils exposés par la marketplace.
+- L'agent orchestre les appels d'outils et applique des garde-fous : le filtre proposé par le LLM est reconstruit à partir d'une whitelist de champs, les clauses de type `1=1` / `OR` injecté sont rejetées.
+- Fallback structuré quand un dataset n'est pas joignable ; erreurs (timeout MCP, limite de tokens) remontées dans l'UI sans casser l'application.
+- Données CRM fictives pour la démonstration.
+
+## Fonctionnalités clés
+
+- Aperçu des comptes détectés, enrichissement d'une entreprise ou de toutes, comptage des cellules complétées.
+- Panneau dépliable qui montre en direct les outils MCP appelés, les requêtes et leurs résultats.
+- Fiche 360° : récap des deals (statuts, montants, années, départements) en graphiques Plotly.
+- Score de santé financière 0-100 (base 50, ajustements sur CA, résultat net, marge, EBITDA, endettement, effectifs) avec pastille verte / orange / rouge — méthode documentée.
+- Veille stratégique web : recherches multi-requêtes avec backoff, synthèse structurée par catégorie et sources citées.
+- Chat libre sur le CRM enrichi, exports texte et CSV.
+
+## Mon rôle
+
+J'ai porté ce projet seul, de bout en bout : cadrage du besoin, conception de l'architecture, développement, tests, déploiement et démonstration.
+
+## Résultats
+
+<!-- TODO: aucun résultat mesuré. Usage / démo à préciser. -->
+
+- Démo live au Saegus Summit, en partenariat avec l'éditeur de la marketplace.
+- PoC fonctionnel en local sur données CRM fictives et registres publics réels.
+- Garde-fous anti-injection couverts par des tests dédiés.

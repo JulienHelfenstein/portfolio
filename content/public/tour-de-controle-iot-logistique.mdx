@@ -1,0 +1,82 @@
+---
+slug: tour-de-controle-iot-logistique
+title: "Tour de contrôle IoT et assistant IA chauffeur"
+tagline: "Passer d'une logistique réactive à proactive : l'alerte capteur déclenche un agent qui oriente le chauffeur vers le bon partenaire"
+clientAlias: "Groupe de logistique panafricain"
+sector: "Logistique / Transport"
+period: "2026-05 → 2026-08"
+status: "poc"
+role: "Développeur IA (vibecodeur), seul contributeur au code"
+team: "solo"
+domains: ["IA générative", "Multi-agents", "Data", "DevOps", "Observabilité"]
+stack: ["Azure OpenAI", "Function Calling", "Streamlit", "Next.js", "TypeScript", "Python", "Supabase", "PostgreSQL", "OSRM", "Whisper", "Langfuse", "OpenTelemetry", "GitLab CI", "Trivy"]
+highlights:
+  - "Interface split-screen : tour de contrôle (trajet, capteurs, alerte typée) à gauche, chat chauffeur à droite"
+  - "Agent Azure OpenAI à 3 tools (partenaires, catalogue IoT, trajet actif), identique en TypeScript et en Python"
+  - "Recommandation d'un partenaire certifié géo-pertinent et d'un produit IoT anti-récidive"
+  - "Carte interactive avec routes OSRM réelles en Afrique de l'Ouest, saisie vocale (Whisper)"
+  - "Quality gates CI : tests > 80 %, LLM-as-a-Judge ≥ 4/5, Trivy, feedback 👍/👎 tracé"
+metrics:
+  - "Satisfaction client : 10/10 (fiche projet)"
+  - "3 scénarios d'incident jouables en démo : froid, vol, flotte"
+media: []  # chemins source dans la version privée
+featuredScore: 4
+confidential: true
+sources: []  # voir version privée
+---
+
+## Le problème
+
+Le client, un groupe logistique, opère du transport routier longue distance dans plusieurs pays d'Afrique de l'Ouest. Aujourd'hui, le chauffeur appelle quand un problème survient : rupture de froid, vol, panne. La réaction est tardive et le contact utile n'est pas toujours connu.
+
+Le client veut montrer en rendez-vous commercial une logistique connectée et proactive, où la flotte IoT détecte et l'IA oriente.
+
+## La solution
+
+Un démonstrateur en une seule interface :
+
+- **Tour de contrôle** : trajet sélectionné, chauffeur, marchandise, capteurs actifs et attendus, progression sur la route, carte d'alerte typée (Froid / Sécurité / Flotte).
+- **Assistant chauffeur** : le chat s'ouvre avec le contexte de l'alerte. Il comprend la demande, propose un partenaire certifié proche de la position actuelle et recommande un produit du catalogue IoT pour éviter la récidive.
+
+Les données sont simulées. Un bandeau « Démo — données simulées » reste visible en permanence.
+
+## Architecture
+
+Pattern « Agent orchestrateur » : un LLM avec Function Calling interroge la base via trois tools. Le même schéma de données sert deux implémentations : Streamlit pour la démo terrain, Next.js pour une version cloud-ready.
+
+```mermaid
+flowchart LR
+  U[Chauffeur / superviseur] --> UI[Streamlit ou Next.js<br/>split-screen]
+  UI --> AG[Agent Azure OpenAI<br/>Function Calling]
+  AG --> T1[search_partners]
+  AG --> T2[search_iot_catalog]
+  AG --> T3[get_active_trip]
+  T1 & T2 & T3 --> DB[(Supabase Postgres<br/>RLS)]
+  UI --> MAP[Carte OSRM]
+  UI --> FB[Feedback 👍/👎]
+  AG --> OBS[Langfuse / OpenTelemetry]
+```
+
+Évolution prévue documentée en ADR : bascule vers une architecture événementielle (capteurs réels → webhook → même agent) sans changer les tools.
+
+## Fonctionnalités clés
+
+- Sélecteur de trajet et trois scénarios d'incident prêts à jouer.
+- Message d'accueil du chat pré-rempli selon l'alerte du trajet.
+- Filtrage des partenaires par service et zone géographique, du catalogue IoT par catégorie d'alerte.
+- Carte interactive des routes réelles (OSRM) avec calcul de progression du trajet.
+- Saisie vocale pour un usage terrain sans clavier.
+- Mode dégradé sur données mock si la base n'est pas disponible (démo hors ligne).
+- Feedback utilisateur sur chaque réponse, stocké en base et poussé dans les traces.
+- CI GitLab : lint, tests > 80 % (Vitest et pytest), LLM-as-a-Judge ≥ 4/5, audit de dépendances et Trivy.
+
+## Mon rôle
+
+Seul contributeur au code, en tant que vibecodeur du projet : conception de l'architecture, double implémentation TypeScript/Python, CI et observabilité. Projet piloté avec un PMO et un manager.
+
+## Résultats
+
+- Démonstrateur livré et présenté au client. Satisfaction client notée 10/10 dans la fiche projet.
+- Le message d'accueil contextuel et le layout split-screen ont été les éléments les mieux reçus en démo (RETEX).
+- Modules identifiés comme réutilisables : carte OSRM, saisie vocale, tools Function Calling.
+- Suite donnée : en attente. <!-- TODO: suite commerciale éventuelle -->

@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio — Julien Helfenstein
 
-## Getting Started
+Portfolio interactif (Next.js 16, React Three Fiber, GSAP, Motion, Lenis) : constellation 3D des projets, récit au scroll, grille filtrable et fiches détaillées.
 
-First, run the development server:
+## Lancer en local
 
 ```bash
+npm install
+cp .env.example .env.local   # puis renseigner PRIVATE_ACCESS_TOKEN
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deux niveaux de contenu
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Tier | Contenu | URL |
+|---|---|---|
+| Public | `content/public/*.mdx` — fiches anonymisées | `/`, `/projects/<slug>` |
+| Privé | `content/private/*.mdx` — vrais clients | `/private`, `/private/projects/<slug>` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+L'espace privé est protégé par `src/proxy.ts`. Pour y donner accès, partager le lien :
 
-## Learn More
+```
+https://<domaine>/access?key=<PRIVATE_ACCESS_TOKEN>
+```
 
-To learn more about Next.js, take a look at the following resources:
+Il pose un cookie httpOnly de 30 jours. Changer `PRIVATE_ACCESS_TOKEN` révoque tous les accès donnés.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Ajouter un projet
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Lancer la skill `portfolio-card` (`.claude/skills/portfolio-card/`) sur le repo du projet : elle génère les deux versions de la fiche. Relire, compléter les `TODO`, puis ajouter le slug dans `src/lib/profile.ts` (`featured`) s'il doit apparaître dans les projets phares.
 
-## Deploy on Vercel
+## Déploiement (Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+vercel link
+vercel env add PRIVATE_ACCESS_TOKEN production
+vercel deploy          # preview
+vercel deploy --prod   # production
+```

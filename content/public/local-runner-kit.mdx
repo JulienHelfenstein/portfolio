@@ -1,0 +1,68 @@
+---
+slug: local-runner-kit
+title: "Kit de runners CI locaux"
+tagline: "Une commande pour faire tourner sa CI GitHub Actions sur son propre poste quand les minutes de l'organisation sont épuisées."
+clientAlias: "Cabinet de conseil data & IA (projet interne)"
+sector: "Interne Saegus"
+period: "2026-10 → 2026-10"
+status: "interne"
+role: "Conception et développement du kit (solo)"
+team: "solo"
+domains: ["DevOps", "Outillage"]
+stack: ["GitHub Actions", "Self-hosted runners", "Docker", "Docker-in-Docker", "Bash", "PowerShell", "GitHub CLI", "Trivy", "Terraform"]
+highlights:
+  - "Installation en une commande (PowerShell ou Bash) : GitHub CLI, Docker, connexion GitHub, 3 runners Docker"
+  - "Label personnel par développeur : chaque CI tourne sur les runners de la personne qui l'a déclenchée"
+  - "Un moteur Docker privé (dind) par runner : services, ports, docker compose et Playwright fonctionnent comme sur ubuntu-latest"
+  - "Script de migration qui ouvre une PR par repo pour basculer les runs-on, avec simulation par défaut"
+  - "Variante « PR seulement » : la CI de main et les déploiements restent sur des runners hébergés"
+metrics: []
+media: []
+featuredScore: 3
+confidential: false
+sources: ["local-runner-kit"]
+---
+
+## Le problème
+
+Les minutes GitHub Actions de l'organisation sont épuisées. Toute la CI (tests, scans, déploiements) des repos de l'équipe est bloquée. Il faut une solution immédiate, sans infrastructure supplémentaire, et qui ne mélange pas les jobs des différents développeurs.
+
+## La solution
+
+Un kit qui transforme le poste de chaque développeur en pool de runners self-hosted. Une seule commande (PowerShell sous Windows, Bash sous macOS / Linux) installe les prérequis, connecte le compte GitHub, construit une image de runner outillée (Trivy, Terraform) et démarre 3 conteneurs portant le label personnel du développeur.
+
+Les workflows ciblent `runs-on: [self-hosted, linux, "<préfixe>-${{ github.triggering_actor }}"]` : la CI part sur les runners de la personne qui l'a déclenchée. Les jobs sans humain (schedule, bots, workflow_run) restent sur `ubuntu-latest`.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  DEV[Push / PR<br/>développeur] --> GH[GitHub Actions<br/>org]
+  GH -- label personnel --> R1[Runner 1]
+  GH --> R2[Runner 2]
+  GH --> R3[Runner 3]
+  R1 --> D1[Docker privé<br/>dind]
+  R2 --> D2[Docker privé<br/>dind]
+  R3 --> D3[Docker privé<br/>dind]
+  MIG[Script de migration] -- 1 PR par repo --> GH
+```
+
+## Fonctionnalités clés
+
+- Scripts idempotents : relancer conserve les runners existants ; une version de kit incrémentée recrée les conteneurs sans perdre l'enregistrement GitHub.
+- Options `--count`, `--reinstall`, `--uninstall` sur les deux OS.
+- Vérification des droits (owner ou rôle « CI/CD admin ») avec message explicite.
+- Isolation : deux jobs peuvent publier le même port, les jobs n'ont pas accès au Docker du poste.
+- Script de migration : simulation par défaut, mode `--apply` (branche, commit, push, PR), mode `--pr-only` ; laisse tels quels et signale matrices, runners Windows/macOS et expressions existantes ; garde `ubuntu-latest` pour les déclencheurs sans humain et les repos avec Dependabot.
+- Règle intégrée à la gouvernance du kit Claude Code de l'équipe.
+
+## Mon rôle
+
+Conception et développement du kit, de bout en bout.
+
+## Résultats
+
+- CI de l'organisation débloquée sans achat de minutes ni serveur dédié.
+- Premiers repos basculés sur les runners personnels de leur déclencheur.
+
+<!-- TODO: nombre de repos migrés et de développeurs équipés ; économie de minutes estimée. -->

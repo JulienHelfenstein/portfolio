@@ -1,0 +1,8 @@
+# Ce fichier remplace .gitignore pour le CLI Vercel : content/private/ DOIT être uploadé.
+node_modules
+.next
+.git
+.env*
+!.env.example
+.claude
+*.tsbuildinfo

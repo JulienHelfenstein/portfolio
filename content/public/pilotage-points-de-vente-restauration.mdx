@@ -1,0 +1,79 @@
+---
+slug: pilotage-points-de-vente-restauration
+title: "Plateforme de pilotage d'un réseau de points de vente"
+tagline: "Une PWA tablette qui remplace téléphone et mails pour les pertes, les tournées, les vitrines et les commandes, avec analyse IA des tendances"
+clientAlias: "Enseigne de restauration multi-sites"
+sector: "Restauration"
+period: "2026-07 → 2026-07"
+status: "pilote"
+role: "Conception et développement, seul contributeur du repo"
+team: "solo"
+domains: ["IA générative", "Data", "DevOps", "Observabilité"]
+stack: ["Next.js 15", "React 19", "TypeScript", "PWA", "Claude (Anthropic API)", "PostgreSQL", "Drizzle ORM", "Azure App Service", "Azure Blob Storage", "Azure Key Vault", "Langfuse", "Terraform", "GitLab CI", "Vitest"]
+highlights:
+  - "PWA tablette d'abord (iOS et Android) installable, sans app store, pour 4 points de vente"
+  - "Mise au rebut en quelques secondes, consolidée réseau, avec analyse de tendances, Q&A et vision par Claude"
+  - "Prévisions de pertes Holt-Winters et démonstration d'un gradient boosting en TypeScript pur"
+  - "Durcissement pour le pilote : PIN individuel haché (scrypt), Postgres, photos en Blob privé, note RGPD"
+  - "Fallback déterministe sans clé API : la démo tient même sans réseau"
+metrics: []
+media: []  # chemins source dans la version privée
+featuredScore: 5
+confidential: true
+sources: []  # voir version privée
+---
+
+## Le problème
+
+Le client, une enseigne de restauration, pilote ses 4 points de vente par téléphone et par mail. Les mises au rebut ne sont pas consolidées : les pertes restent invisibles. Les tournées du city manager ne laissent pas de trace exploitable. Contrôler les vitrines demande de se déplacer. Les commandes food quotidiennes génèrent erreurs et allers-retours.
+
+Le client veut un outil unique, utilisable sur tablette en point de vente, qui fiabilise ces quatre flux et fait ressortir les tendances de pertes.
+
+## La solution
+
+Une plateforme web installable sur tablette, avec un accès par rôle (point de vente, city manager, direction, super admin) :
+
+1. **Mise au rebut** : déclaration rapide des pertes, consolidation réseau, analyse IA des tendances par produit, volume et cause.
+2. **City manager** : tournées avec checklist, points à traiter, historique par point de vente.
+3. **Photo vitrine** : publication quotidienne depuis la caméra de la tablette, revue de conformité à distance.
+4. **Commandes food** : commande de fin de journée centralisée, sans téléphone ni mail.
+
+La direction dispose d'un tableau de bord consolidé avec prévisions et plan d'action.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  T[Tablettes PDV<br/>PWA] --> APP[Next.js 15<br/>App Router]
+  CM[City manager / direction] --> APP
+  APP --> AUTH[Auth PIN<br/>sessions signées]
+  APP --> ST[store.ts<br/>façade 2 drivers]
+  ST --> PG[(PostgreSQL<br/>Drizzle)]
+  APP --> BL[Blob privé<br/>photos]
+  APP --> LLM[Claude<br/>analyse, Q&A, vision]
+  APP --> FC[Prévisions<br/>Holt-Winters, GBM]
+  LLM --> LF[Langfuse]
+```
+
+Déploiement sur Azure App Service via Terraform et GitLab CI en OIDC (zéro secret statique), secrets dans Key Vault.
+
+## Fonctionnalités clés
+
+- Déclaration de rebut tactile, annulation réservée aux profils réseau pour garder la traçabilité.
+- Approfondissement du rebut sur 5 axes : boucle rebut → commande, recommandations suivies en actions, saisie terrain enrichie, analyse IA plus fine, angle RSE anti-gaspillage.
+- Analyse IA : tendances, questions-réponses, reconnaissance photo des invendus.
+- Tableau de bord direction : vues 30 j / 7 j, axes adaptatifs, prévision Holt-Winters, comparaison avec un gradient boosting « ce que permettraient de vraies données ».
+- Objectifs ajustables par point de vente, vue super admin du réseau, export CSV.
+- Observabilité Langfuse : une trace par tâche métier, utilisateur haché, feedback 👍/👎 et scores du juge LLM.
+- Sécurité du pilote : PIN individuel à changer à la première connexion, verrouillage progressif, rate limiting, refus de démarrer sans secret de session.
+- Quality gates : ESLint, tests Vitest avec seuil > 80 %, LLM-as-a-Judge, Trivy, `terraform validate`, smoke test `/api/health`.
+
+## Mon rôle
+
+Seul contributeur du repo : cadrage technique, conception (ADR, design du durcissement et de la vision vitrine), développement, IaC et CI.
+
+## Résultats
+
+- Démonstrateur livré sur données synthétiques (4 points de vente fictifs, 30 jours d'historique), puis durci pour un pilote avec l'effectif réel.
+- Vision vitrine en deux passes (« le modèle observe, le code décide ») conçue et validée en ADR ; implémentation non démarrée.
+- <!-- TODO: confirmer le démarrage effectif du pilote, sa durée, le nombre d'utilisateurs et les premiers retours. -->

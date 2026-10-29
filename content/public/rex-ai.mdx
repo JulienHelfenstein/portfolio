@@ -1,0 +1,72 @@
+---
+slug: rex-ai
+title: "Agent REX"
+tagline: "Capitaliser une mission en parlant : l'agent interviewe le consultant dans Teams et range tout dans SharePoint au bon format"
+clientAlias: "Cabinet de conseil data & IA (projet interne)"
+sector: "Interne Saegus"
+period: "2026-06 → 2026-08"
+status: "interne"
+role: "Porteur et développeur unique du POC"
+team: "solo"
+domains: ["IA générative", "RAG", "Observabilité", "DevOps", "Outillage"]
+stack: ["Python", "Bot Framework", "Microsoft Teams", "Azure OpenAI (gpt-5.4-mini, gpt-realtime, Whisper, text-embedding-3-small)", "WebRTC", "Microsoft Graph / SharePoint", "PostgreSQL pgvector", "FastAPI", "Next.js", "Streamlit", "python-pptx", "Langfuse", "Terraform", "Azure App Service", "Entra ID (Easy Auth)"]
+highlights:
+  - "Interview vocale temps réel dans Teams (WebRTC vers gpt-realtime, l'audio ne transite pas par le serveur) ou interview texte"
+  - "Pré-brief automatique : l'agent lit les livrables déjà déposés avant d'interviewer"
+  - "Écriture dans SharePoint après validation humaine, livrables .pptx conformes au template officiel FR + EN"
+  - "Classement et renommage automatiques des livrables déposés selon la nomenclature interne"
+  - "RAG de consultation (bot + plateforme web Next.js) et relance des missions livrées sans REX"
+metrics: ["611 tests unitaires", "95,5 % de couverture de tests"]
+media: ["poc-rex-ai/architecture-flow.png"]
+featuredScore: 5
+confidential: false
+sources: ["poc-rex-ai"]
+---
+
+## Le problème
+
+Les consultants accumulent à chaque mission un savoir précieux, mais il reste oral ou dispersé et se perd. Sans réflexe simple de capitalisation, l'entreprise ne sait pas finement « qui a fait quoi », et les nouveaux ne peuvent pas réutiliser ce qui a déjà été éprouvé.
+
+## La solution
+
+Un agent conversationnel dans Microsoft Teams qui interviewe le consultant à la fin de sa mission, à la voix ou à l'écrit, puis range la capitalisation dans SharePoint au bon endroit, à la bonne nomenclature et au format officiel. Il classe aussi les livrables envoyés en pièce jointe, répond aux questions sur les retours d'expérience déjà capitalisés et relance les consultants dont la mission est finie sans REX. Une plateforme web sert la recherche et le pilotage.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  C[Consultant] --> T[Bot Teams]
+  T --> RT[Interview vocale gpt-realtime / texte]
+  RT --> AN[Analyse gpt-5.4-mini]
+  AN --> VAL[Carte de validation]
+  VAL --> SP[(SharePoint : données mission + .pptx)]
+  SP --> IDX[Sync index]
+  IDX --> PG[(Postgres pgvector)]
+  W[Plateforme Next.js + API FastAPI] --> PG
+  T --> LF[Langfuse]
+```
+
+## Fonctionnalités clés
+
+- Interview conversationnelle vocale (WebRTC direct, VAD, reprise) ou texte, qui demande client et mission avant de commencer.
+- Pré-brief à partir des livrables existants : l'interview valide plutôt qu'elle n'interroge à froid.
+- SharePoint source de vérité ; l'index vectoriel est un dérivé reconstructible (synchronisation idempotente et incrémentale).
+- Aucune écriture sans validation : plan affiché en Adaptive Card, diff des champs, écriture après clic.
+- Slides de référence et fiche REX en `.pptx` conformes au template officiel.
+- Dépôt de livrables : lot de 1 à 10 fichiers, classement par phase, renommage normalisé, LLM seulement pour les noms ambigus.
+- Mode consultation RAG avec sources cliquables, sans couper une interview en cours.
+- Relance automatique des missions livrées sans REX.
+- Sécurité issue d'un audit : SSO Entra, jeton de session opaque, rate limiting, pseudonymisation HMAC, téléchargement protégé contre le SSRF, contenu non envoyé à l'outil d'observabilité par défaut.
+- Évaluation de l'interview par un consultant synthétique joué par un LLM, plus LLM-as-a-Judge.
+- Huit ADR documentant les choix d'architecture.
+
+## Mon rôle
+
+Porteur et développeur unique du POC : cadrage, architecture, développement bot, back, front, infra et sécurité, passation.
+
+## Résultats
+
+- Écriture SharePoint validée en conditions réelles.
+- 611 tests unitaires, 95,5 % de couverture.
+- Passage derrière SSO Entra et remédiation de l'audit de sécurité.
+<!-- TODO: pas encore d'usage par un groupe de consultants. -->
