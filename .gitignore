@@ -44,3 +44,6 @@ next-env.d.ts
 
 # fiches privées (vrais clients) : jamais dans git, déployées via le CLI Vercel
 content/private/
+
+.vercel
+.env*
